@@ -32,6 +32,15 @@ export async function listMyProducts(req, res, next) {
   }
 }
 
+export async function deleteProduct(req, res, next) {
+  try {
+    await productService.deleteProduct({ productId: req.params.id, sellerId: req.user._id });
+    return sendSuccess(res, null, "Product deleted");
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function updateProduct(req, res, next) {
   try {
     const { name, description, price, stock, imageUrl } = req.body;

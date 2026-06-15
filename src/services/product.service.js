@@ -41,6 +41,17 @@ export async function listMyProducts({ sellerId, page = 1, limit = 10 }) {
   };
 }
 
+export async function deleteProduct({ productId, sellerId }) {
+  const store = await Store.findOne({ seller: sellerId });
+  if (!store) throw new ApiError(404, "You don't have a store yet");
+
+  const product = await Product.findById(productId);
+  if (!product) throw new ApiError(404, "Product not found");
+  if (!product.store.equals(store._id)) throw new ApiError(403, "You do not own this product");
+
+  await product.deleteOne();
+}
+
 export async function updateProduct({ productId, sellerId, updates }) {
   const store = await Store.findOne({ seller: sellerId });
   if (!store) throw new ApiError(404, "You don't have a store yet");

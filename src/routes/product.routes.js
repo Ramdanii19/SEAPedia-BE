@@ -13,6 +13,7 @@ router.get("/", productController.listPublicProducts);
 router.get("/me/list", protect, requireRole(ROLES.SELLER), productController.listMyProducts);
 router.get("/:id", productController.getProductDetail);
 router.patch("/:id", protect, requireRole(ROLES.SELLER), updateProductValidator, validate, productController.updateProduct);
+router.delete("/:id", protect, requireRole(ROLES.SELLER), productController.deleteProduct);
 
 router.post(
   "/",
