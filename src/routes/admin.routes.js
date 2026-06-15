@@ -11,8 +11,10 @@ const adminGuard = [protect, requireRole(ROLES.ADMIN)];
 
 const router = Router();
 
-router.get("/users",  ...adminGuard, adminController.listUsers);
-router.get("/stores", ...adminGuard, adminController.listStores);
+router.get("/users",    ...adminGuard, adminController.listUsers);
+router.get("/stores",   ...adminGuard, adminController.listStores);
+router.get("/products", ...adminGuard, adminController.listProducts);
+router.get("/orders",   ...adminGuard, adminController.listOrders);
 
 // Discount management (moved here from discount.routes.js for cohesion)
 router.post("/vouchers", ...adminGuard, createVoucherValidator, validate, discountController.createVoucher);
