@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken";
+import { randomUUID } from "crypto";
 import { env } from "../config/env.js";
 
 export function signToken(payload) {
-  return jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtExpiresIn });
+  return jwt.sign({ ...payload, jti: randomUUID() }, env.jwtSecret, { expiresIn: env.jwtExpiresIn });
 }
 
 export function verifyToken(token) {
