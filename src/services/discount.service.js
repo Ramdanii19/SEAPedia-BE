@@ -1,6 +1,48 @@
 import Voucher from "../models/voucher.model.js";
 import Promo from "../models/promo.model.js";
 import { ApiError } from "../utils/ApiError.js";
+import { DISCOUNT_TYPE } from "../constants/enums.js";
+
+function calcDiscountAmount(discountType, discountValue, subtotal) {
+  if (discountType === DISCOUNT_TYPE.PERCENTAGE) {
+    return Math.round((discountValue / 100) * subtotal);
+  }
+  return Math.min(discountValue, subtotal); // FIXED tidak boleh melebihi subtotal
+}
+
+/**
+ * Validasi kode diskon dan hitung nilainya terhadap subtotal.
+ * @param {"voucher"|"promo"} type
+ * @returns {{ kind, id, discountAmount }}
+ */
+export async function validateDiscount({ code, type, subtotal }) {
+  if (type === "voucher") {
+    const voucher = await Voucher.findOne({ code: code.toUpperCase() });
+    if (!voucher) throw new ApiError(404, "Voucher tidak ditemukan");
+    if (voucher.expiryDate < new Date()) throw new ApiError(400, "Voucher sudah kedaluwarsa");
+    if (voucher.remainingUsage <= 0) throw new ApiError(400, "Kuota voucher habis");
+
+    return {
+      kind: "voucher",
+      id: voucher._id,
+      discountAmount: calcDiscountAmount(voucher.discountType, voucher.discountValue, subtotal),
+    };
+  }
+
+  if (type === "promo") {
+    const promo = await Promo.findOne({ code: code.toUpperCase() });
+    if (!promo) throw new ApiError(404, "Promo tidak ditemukan");
+    if (promo.expiryDate < new Date()) throw new ApiError(400, "Promo sudah kedaluwarsa");
+
+    return {
+      kind: "promo",
+      id: promo._id,
+      discountAmount: calcDiscountAmount(promo.discountType, promo.discountValue, subtotal),
+    };
+  }
+
+  throw new ApiError(400, "Tipe diskon tidak valid. Gunakan 'voucher' atau 'promo'");
+}
 
 export async function listVouchers({ page = 1, limit = 10 }) {
   const skip = (page - 1) * limit;
