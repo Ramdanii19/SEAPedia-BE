@@ -1,5 +1,5 @@
-import sanitizeHtml from "sanitize-html";
 import Review from "../models/review.model.js";
+import { sanitizeText } from "../utils/sanitize.js";
 
 export async function listReviews({ page = 1, limit = 10 }) {
   const skip = (page - 1) * limit;
@@ -21,7 +21,7 @@ export async function listReviews({ page = 1, limit = 10 }) {
 }
 
 export async function createReview({ user, reviewerName, rating, comment }) {
-  const sanitizedComment = sanitizeHtml(comment, { allowedTags: [], allowedAttributes: {} });
+  const sanitizedComment = sanitizeText(comment);
 
   const review = await Review.create({
     user: user?._id ?? null,
