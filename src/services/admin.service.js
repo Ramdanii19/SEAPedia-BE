@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import { ORDER_STATUS, DELIVERY_METHOD } from "../constants/enums.js";
 import { SLA_HOURS } from "../constants/config.js";
+import { advanceTime, getCurrentTime } from "./systemTime.service.js";
 import Store from "../models/store.model.js";
 import Product from "../models/product.model.js";
 import Order from "../models/order.model.js";
@@ -11,6 +12,27 @@ import DeliveryJob from "../models/deliveryJob.model.js";
 // Order dianggap overdue jika: status bukan COMPLETED/RETURNED
 // DAN waktu sejak createdAt melebihi SLA_HOURS[deliveryMethod].
 // Dipakai penuh di Branch 13 (notifikasi & auto-escalation).
+export async function simulateNextDay() {
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+  const newTime = await advanceTime(ONE_DAY_MS);
+
+  // Periksa order yang kini melewati SLA setelah waktu dimajukan
+  const terminalStatuses = [ORDER_STATUS.COMPLETED, ORDER_STATUS.RETURNED];
+  const now = newTime;
+
+  const slaConditions = Object.values(DELIVERY_METHOD).map((method) => ({
+    deliveryMethod: method,
+    createdAt: { $lt: new Date(now - SLA_HOURS[method] * 60 * 60 * 1000) },
+  }));
+
+  const overdueCount = await Order.countDocuments({
+    status: { $nin: terminalStatuses },
+    $or: slaConditions,
+  });
+
+  return { newSystemTime: newTime, overdueCount };
+}
+
 export async function listOverdueOrders({ page = 1, limit = 20 }) {
   const terminalStatuses = [ORDER_STATUS.COMPLETED, ORDER_STATUS.RETURNED];
   const now = new Date();

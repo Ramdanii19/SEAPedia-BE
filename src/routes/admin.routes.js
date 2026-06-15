@@ -16,7 +16,8 @@ router.get("/stores",   ...adminGuard, adminController.listStores);
 router.get("/products",      ...adminGuard, adminController.listProducts);
 router.get("/orders",        ...adminGuard, adminController.listOrders);
 // /orders/overdue harus di atas /orders/:id jika route detail ditambahkan nanti
-router.get("/orders/overdue", ...adminGuard, adminController.listOverdueOrders);
+router.get("/orders/overdue",       ...adminGuard, adminController.listOverdueOrders);
+router.post("/simulate/next-day",   ...adminGuard, adminController.simulateNextDay);
 router.get("/vouchers",      ...adminGuard, adminController.listVouchers);
 router.get("/promos",        ...adminGuard, adminController.listPromos);
 router.get("/delivery-jobs", ...adminGuard, adminController.listDeliveryJobs);

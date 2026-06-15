@@ -1,6 +1,13 @@
 import * as adminService from "../services/admin.service.js";
 import { sendSuccess } from "../utils/response.js";
 
+export async function simulateNextDay(req, res, next) {
+  try {
+    const result = await adminService.simulateNextDay();
+    return sendSuccess(res, result, "System time advanced by 1 day");
+  } catch (err) { next(err); }
+}
+
 export async function listOverdueOrders(req, res, next) {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
