@@ -3,6 +3,23 @@ import Store from "../models/store.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ORDER_STATUS } from "../constants/enums.js";
 
+export async function getOrderTimeline({ orderId, userId, activeRole }) {
+  const order = await Order.findById(orderId).select("statusHistory buyer store status");
+  if (!order) throw new ApiError(404, "Order not found");
+
+  if (activeRole === "BUYER") {
+    if (!order.buyer.equals(userId)) throw new ApiError(403, "Access denied");
+  } else if (activeRole === "SELLER") {
+    const store = await Store.findOne({ seller: userId });
+    if (!store || !order.store.equals(store._id)) throw new ApiError(403, "Access denied");
+  } else {
+    throw new ApiError(403, "Access denied");
+  }
+
+  const timeline = [...order.statusHistory].sort((a, b) => a.createdAt - b.createdAt);
+  return timeline;
+}
+
 export async function processOrder({ orderId, sellerId }) {
   const store = await Store.findOne({ seller: sellerId });
   if (!store) throw new ApiError(404, "You don't have a store yet");

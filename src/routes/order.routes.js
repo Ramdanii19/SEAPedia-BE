@@ -9,6 +9,7 @@ const router = Router();
 router.get("/", protect, requireRole(ROLES.BUYER), orderController.listMyOrders);
 // /seller/incoming harus di atas /:id agar "seller" tidak ditangkap sebagai param id
 router.get("/seller/incoming", protect, requireRole(ROLES.SELLER), orderController.getSellerOrders);
+router.get("/:id/timeline", protect, orderController.getOrderTimeline);
 router.patch("/:id/process", protect, requireRole(ROLES.SELLER), orderController.processOrder);
 router.get("/:id", protect, requireRole(ROLES.BUYER), orderController.getOrderDetail);
 
