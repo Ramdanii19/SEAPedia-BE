@@ -12,6 +12,12 @@ export async function login(req, res, next) {
   }
 }
 
+// JWT is stateless — server cannot invalidate a token.
+// Strategy: client drops the token on logout. Full blacklist (Redis TTL) deferred to Level 7 hardening.
+export function logout(req, res) {
+  return sendSuccess(res, null, "Logged out successfully");
+}
+
 export function getMe(req, res) {
   const { user } = req;
   return sendSuccess(res, {

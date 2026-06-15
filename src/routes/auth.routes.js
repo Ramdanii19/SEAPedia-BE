@@ -10,5 +10,6 @@ router.post("/register", registerValidator, validate, authController.register);
 router.post("/login", loginValidator, validate, authController.login);
 router.patch("/active-role", protect, selectActiveRoleValidator, validate, authController.selectActiveRole);
 router.get("/me", protect, authController.getMe);
+router.post("/logout", protect, authController.logout);
 
 export default router;
