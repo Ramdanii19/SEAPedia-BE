@@ -1,6 +1,15 @@
 import * as orderService from "../services/order.service.js";
 import { sendSuccess } from "../utils/response.js";
 
+export async function processOrder(req, res, next) {
+  try {
+    const order = await orderService.processOrder({ orderId: req.params.id, sellerId: req.user._id });
+    return sendSuccess(res, { order }, "Order moved to WAITING_DELIVERY");
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getSellerOrders(req, res, next) {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);

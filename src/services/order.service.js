@@ -1,6 +1,24 @@
 import Order from "../models/order.model.js";
 import Store from "../models/store.model.js";
 import { ApiError } from "../utils/ApiError.js";
+import { ORDER_STATUS } from "../constants/enums.js";
+
+export async function processOrder({ orderId, sellerId }) {
+  const store = await Store.findOne({ seller: sellerId });
+  if (!store) throw new ApiError(404, "You don't have a store yet");
+
+  const order = await Order.findById(orderId);
+  if (!order) throw new ApiError(404, "Order not found");
+  if (!order.store.equals(store._id)) throw new ApiError(403, "This order does not belong to your store");
+  if (order.status !== ORDER_STATUS.PACKING) {
+    throw new ApiError(400, `Order cannot be processed from status '${order.status}'`);
+  }
+
+  order.pushStatus(ORDER_STATUS.WAITING_DELIVERY, "Order processed by seller");
+  await order.save();
+
+  return order;
+}
 
 export async function getSellerOrders({ sellerId, page = 1, limit = 10 }) {
   const store = await Store.findOne({ seller: sellerId });
