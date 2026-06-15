@@ -11,6 +11,21 @@ export async function getOrCreateWallet(userId) {
   return wallet;
 }
 
+export async function getTransactions({ userId, page = 1, limit = 10 }) {
+  const wallet = await getOrCreateWallet(userId);
+  const skip = (page - 1) * limit;
+
+  const [transactions, total] = await Promise.all([
+    WalletTransaction.find({ wallet: wallet._id }).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    WalletTransaction.countDocuments({ wallet: wallet._id }),
+  ]);
+
+  return {
+    transactions,
+    pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
+  };
+}
+
 export async function topUp({ userId, amount }) {
   const wallet = await Wallet.findOneAndUpdate(
     { user: userId },

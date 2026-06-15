@@ -15,6 +15,7 @@ const topUpValidator = [
 ];
 
 router.get("/", protect, requireRole(ROLES.BUYER), walletController.getWallet);
+router.get("/transactions", protect, requireRole(ROLES.BUYER), walletController.getTransactions);
 router.post("/topup", protect, requireRole(ROLES.BUYER), topUpValidator, validate, walletController.topUp);
 
 export default router;
