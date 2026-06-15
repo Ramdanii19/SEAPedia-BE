@@ -4,6 +4,7 @@ import reviewRoutes from "./review.routes.js";
 import storeRoutes from "./store.routes.js";
 import productRoutes from "./product.routes.js";
 import walletRoutes from "./wallet.routes.js";
+import addressRoutes from "./address.routes.js";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use("/reviews", reviewRoutes);
 router.use("/stores", storeRoutes);
 router.use("/products", productRoutes);
 router.use("/wallet", walletRoutes);
+router.use("/addresses", addressRoutes);
 
 export default router;
