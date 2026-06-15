@@ -6,6 +6,32 @@ import { ApiError } from "../utils/ApiError.js";
 import { DELIVERY_JOB_STATUS, ORDER_STATUS, WALLET_TX_TYPE } from "../constants/enums.js";
 import { getOrCreateWallet } from "./wallet.service.js";
 
+// Rumus earning driver: earning = deliveryFee × DRIVER_EARNING_RATE (default 0.8)
+// Dihitung saat processOrder dan disimpan di DeliveryJob.earning.
+// Driver tidak mendapat potongan PPN — earning adalah bagian bersih dari ongkir.
+export async function getDriverDashboard(driverId) {
+  const [activeJob, allJobs, wallet] = await Promise.all([
+    DeliveryJob.findOne({ driver: driverId, status: DELIVERY_JOB_STATUS.TAKEN })
+      .populate({ path: "order", select: "shippingAddress shippingRecipientName deliveryMethod store", populate: { path: "store", select: "storeName" } }),
+    DeliveryJob.find({ driver: driverId })
+      .select("status earning takenAt completedAt order")
+      .populate({ path: "order", select: "shippingAddress deliveryMethod createdAt" })
+      .sort({ createdAt: -1 }),
+    getOrCreateWallet(driverId),
+  ]);
+
+  const completedJobs = allJobs.filter((j) => j.status === DELIVERY_JOB_STATUS.COMPLETED);
+  const totalEarning = completedJobs.reduce((sum, j) => sum + j.earning, 0);
+
+  return {
+    activeJob: activeJob ?? null,
+    totalEarning,
+    completedCount: completedJobs.length,
+    walletBalance: wallet.balance,
+    jobHistory: allJobs,
+  };
+}
+
 export async function completeJob({ jobId, driverId }) {
   const job = await DeliveryJob.findById(jobId);
   if (!job) throw new ApiError(404, "Delivery job not found");
