@@ -1,0 +1,20 @@
+import { Router } from "express";
+import { createProductValidator } from "../validators/product.validator.js";
+import { validate } from "../middlewares/validate.middleware.js";
+import { protect } from "../middlewares/auth.middleware.js";
+import { requireRole } from "../middlewares/role.middleware.js";
+import { ROLES } from "../constants/enums.js";
+import * as productController from "../controllers/product.controller.js";
+
+const router = Router();
+
+router.post(
+  "/",
+  protect,
+  requireRole(ROLES.SELLER),
+  createProductValidator,
+  validate,
+  productController.createProduct
+);
+
+export default router;
