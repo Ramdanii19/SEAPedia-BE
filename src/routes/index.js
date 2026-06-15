@@ -6,6 +6,7 @@ import productRoutes from "./product.routes.js";
 import walletRoutes from "./wallet.routes.js";
 import addressRoutes from "./address.routes.js";
 import cartRoutes from "./cart.routes.js";
+import checkoutRoutes from "./checkout.routes.js";
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use("/products", productRoutes);
 router.use("/wallet", walletRoutes);
 router.use("/addresses", addressRoutes);
 router.use("/cart", cartRoutes);
+router.use("/checkout", checkoutRoutes);
 
 export default router;
