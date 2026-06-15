@@ -30,7 +30,7 @@ export async function takeJob(req, res, next) {
 
 export async function getJobDetail(req, res, next) {
   try {
-    const job = await deliveryService.getJobDetail(req.params.id);
+    const job = await deliveryService.getJobDetail({ jobId: req.params.id, driverId: req.user._id });
     return sendSuccess(res, { job });
   } catch (err) {
     next(err);

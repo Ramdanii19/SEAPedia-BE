@@ -1,5 +1,6 @@
 import * as authService from "../services/auth.service.js";
 import { sendSuccess } from "../utils/response.js";
+import { blacklistToken } from "../utils/tokenBlacklist.js";
 
 export async function login(req, res, next) {
   try {
@@ -12,9 +13,9 @@ export async function login(req, res, next) {
   }
 }
 
-// JWT is stateless — server cannot invalidate a token.
-// Strategy: client drops the token on logout. Full blacklist (Redis TTL) deferred to Level 7 hardening.
 export function logout(req, res) {
+  const { jti, exp } = req.tokenPayload;
+  blacklistToken(jti, exp * 1000); // exp is Unix seconds → ms
   return sendSuccess(res, null, "Logged out successfully");
 }
 

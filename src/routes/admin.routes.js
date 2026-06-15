@@ -1,11 +1,21 @@
 import { Router } from "express";
+import { param } from "express-validator";
 import { protect } from "../middlewares/auth.middleware.js";
 import { requireRole } from "../middlewares/role.middleware.js";
 import { ROLES } from "../constants/enums.js";
 import * as adminController from "../controllers/admin.controller.js";
 import * as discountController from "../controllers/discount.controller.js";
-import { createVoucherValidator, createPromoValidator } from "../validators/discount.validator.js";
+import {
+  createVoucherValidator,
+  createPromoValidator,
+  updateVoucherValidator,
+  updatePromoValidator,
+} from "../validators/discount.validator.js";
 import { validate } from "../middlewares/validate.middleware.js";
+
+const mongoId = (name = "id") => [
+  param(name).isMongoId().withMessage(`Invalid ${name}`),
+];
 
 const adminGuard = [protect, requireRole(ROLES.ADMIN)];
 
@@ -25,13 +35,13 @@ router.get("/delivery-jobs", ...adminGuard, adminController.listDeliveryJobs);
 
 // Discount management (moved here from discount.routes.js for cohesion)
 router.post("/vouchers",      ...adminGuard, createVoucherValidator, validate, discountController.createVoucher);
-router.get("/vouchers/:id",  ...adminGuard, adminController.getVoucherDetail);
-router.patch("/vouchers/:id",...adminGuard, adminController.updateVoucher);
-router.delete("/vouchers/:id",...adminGuard, adminController.deleteVoucher);
+router.get("/vouchers/:id",   ...adminGuard, ...mongoId(), validate, adminController.getVoucherDetail);
+router.patch("/vouchers/:id", ...adminGuard, ...mongoId(), updateVoucherValidator, validate, adminController.updateVoucher);
+router.delete("/vouchers/:id",...adminGuard, ...mongoId(), validate, adminController.deleteVoucher);
 
-router.post("/promos",       ...adminGuard, createPromoValidator, validate, discountController.createPromo);
-router.get("/promos/:id",    ...adminGuard, adminController.getPromoDetail);
-router.patch("/promos/:id",  ...adminGuard, adminController.updatePromo);
-router.delete("/promos/:id", ...adminGuard, adminController.deletePromo);
+router.post("/promos",        ...adminGuard, createPromoValidator, validate, discountController.createPromo);
+router.get("/promos/:id",     ...adminGuard, ...mongoId(), validate, adminController.getPromoDetail);
+router.patch("/promos/:id",   ...adminGuard, ...mongoId(), updatePromoValidator, validate, adminController.updatePromo);
+router.delete("/promos/:id",  ...adminGuard, ...mongoId(), validate, adminController.deletePromo);
 
 export default router;
