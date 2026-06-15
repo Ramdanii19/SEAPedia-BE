@@ -83,7 +83,7 @@ export async function takeJob({ jobId, driverId }) {
   return job;
 }
 
-export async function getJobDetail(jobId) {
+export async function getJobDetail({ jobId, driverId }) {
   const job = await DeliveryJob.findById(jobId).populate({
     path: "order",
     select: "shippingRecipientName shippingPhone shippingAddress deliveryMethod deliveryFee items status store",
@@ -94,6 +94,13 @@ export async function getJobDetail(jobId) {
   });
 
   if (!job) throw new ApiError(404, "Delivery job not found");
+
+  // AVAILABLE jobs are visible to all drivers (needed to decide whether to take).
+  // TAKEN/COMPLETED jobs contain private recipient data — restrict to assigned driver only.
+  if (job.status !== DELIVERY_JOB_STATUS.AVAILABLE && !job.driver?.equals(driverId)) {
+    throw new ApiError(403, "Access denied");
+  }
+
   return job;
 }
 
