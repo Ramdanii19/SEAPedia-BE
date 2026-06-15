@@ -2,6 +2,41 @@ import User from "../models/user.model.js";
 import Store from "../models/store.model.js";
 import Product from "../models/product.model.js";
 import Order from "../models/order.model.js";
+import Voucher from "../models/voucher.model.js";
+import Promo from "../models/promo.model.js";
+import DeliveryJob from "../models/deliveryJob.model.js";
+
+export async function listVouchers({ page = 1, limit = 20 }) {
+  const skip = (page - 1) * limit;
+  const [vouchers, total] = await Promise.all([
+    Voucher.find().sort({ expiryDate: 1 }).skip(skip).limit(limit),
+    Voucher.countDocuments(),
+  ]);
+  return { vouchers, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+}
+
+export async function listPromos({ page = 1, limit = 20 }) {
+  const skip = (page - 1) * limit;
+  const [promos, total] = await Promise.all([
+    Promo.find().sort({ expiryDate: 1 }).skip(skip).limit(limit),
+    Promo.countDocuments(),
+  ]);
+  return { promos, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+}
+
+export async function listDeliveryJobs({ page = 1, limit = 20 }) {
+  const skip = (page - 1) * limit;
+  const [jobs, total] = await Promise.all([
+    DeliveryJob.find()
+      .populate("driver", "fullName email")
+      .populate({ path: "order", select: "status deliveryMethod store", populate: { path: "store", select: "storeName" } })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    DeliveryJob.countDocuments(),
+  ]);
+  return { jobs, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+}
 
 export async function listUsers({ page = 1, limit = 10 }) {
   const skip = (page - 1) * limit;
