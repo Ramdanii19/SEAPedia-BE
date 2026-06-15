@@ -10,6 +10,7 @@ import checkoutRoutes from "./checkout.routes.js";
 import orderRoutes from "./order.routes.js";
 import discountRoutes from "./discount.routes.js";
 import reportRoutes from "./report.routes.js";
+import deliveryRoutes from "./delivery.routes.js";
 import voucherRoutes from "./voucher.routes.js";
 import promoRoutes from "./promo.routes.js";
 
@@ -30,6 +31,7 @@ router.use("/checkout", checkoutRoutes);
 router.use("/orders", orderRoutes);
 router.use("/admin", discountRoutes);
 router.use("/reports", reportRoutes);
+router.use("/delivery", deliveryRoutes);
 router.use("/vouchers", voucherRoutes);
 router.use("/promos", promoRoutes);
 
