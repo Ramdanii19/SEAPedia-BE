@@ -1,10 +1,45 @@
 import User from "../models/user.model.js";
+import { ORDER_STATUS, DELIVERY_METHOD } from "../constants/enums.js";
+import { SLA_HOURS } from "../constants/config.js";
 import Store from "../models/store.model.js";
 import Product from "../models/product.model.js";
 import Order from "../models/order.model.js";
 import Voucher from "../models/voucher.model.js";
 import Promo from "../models/promo.model.js";
 import DeliveryJob from "../models/deliveryJob.model.js";
+
+// Order dianggap overdue jika: status bukan COMPLETED/RETURNED
+// DAN waktu sejak createdAt melebihi SLA_HOURS[deliveryMethod].
+// Dipakai penuh di Branch 13 (notifikasi & auto-escalation).
+export async function listOverdueOrders({ page = 1, limit = 20 }) {
+  const terminalStatuses = [ORDER_STATUS.COMPLETED, ORDER_STATUS.RETURNED];
+  const now = new Date();
+
+  // Build per-method SLA deadline conditions
+  const slaConditions = Object.values(DELIVERY_METHOD).map((method) => ({
+    deliveryMethod: method,
+    createdAt: { $lt: new Date(now - SLA_HOURS[method] * 60 * 60 * 1000) },
+  }));
+
+  const filter = {
+    status: { $nin: terminalStatuses },
+    $or: slaConditions,
+  };
+
+  const skip = (page - 1) * limit;
+  const [orders, total] = await Promise.all([
+    Order.find(filter)
+      .select("-statusHistory -items")
+      .populate("buyer", "fullName email")
+      .populate("store", "storeName")
+      .sort({ createdAt: 1 })
+      .skip(skip)
+      .limit(limit),
+    Order.countDocuments(filter),
+  ]);
+
+  return { orders, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+}
 
 export async function listVouchers({ page = 1, limit = 20 }) {
   const skip = (page - 1) * limit;

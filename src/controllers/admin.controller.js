@@ -1,6 +1,14 @@
 import * as adminService from "../services/admin.service.js";
 import { sendSuccess } from "../utils/response.js";
 
+export async function listOverdueOrders(req, res, next) {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    return sendSuccess(res, await adminService.listOverdueOrders({ page, limit }));
+  } catch (err) { next(err); }
+}
+
 export async function listVouchers(req, res, next) {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
