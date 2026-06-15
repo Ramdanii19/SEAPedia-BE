@@ -32,6 +32,25 @@ export async function listMyProducts(req, res, next) {
   }
 }
 
+export async function updateProduct(req, res, next) {
+  try {
+    const { name, description, price, stock, imageUrl } = req.body;
+    const updates = Object.fromEntries(
+      Object.entries({ name, description, price, stock, imageUrl }).filter(([, v]) => v !== undefined)
+    );
+
+    const product = await productService.updateProduct({
+      productId: req.params.id,
+      sellerId: req.user._id,
+      updates,
+    });
+
+    return sendSuccess(res, { product }, "Product updated");
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function createProduct(req, res, next) {
   try {
     const { name, description, price, stock, imageUrl } = req.body;

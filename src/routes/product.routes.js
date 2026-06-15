@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createProductValidator } from "../validators/product.validator.js";
+import { createProductValidator, updateProductValidator } from "../validators/product.validator.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import { protect } from "../middlewares/auth.middleware.js";
 import { requireRole } from "../middlewares/role.middleware.js";
@@ -12,6 +12,7 @@ router.get("/", productController.listPublicProducts);
 // /me/list harus di atas /:id agar "me" tidak ditangkap sebagai param id
 router.get("/me/list", protect, requireRole(ROLES.SELLER), productController.listMyProducts);
 router.get("/:id", productController.getProductDetail);
+router.patch("/:id", protect, requireRole(ROLES.SELLER), updateProductValidator, validate, productController.updateProduct);
 
 router.post(
   "/",
