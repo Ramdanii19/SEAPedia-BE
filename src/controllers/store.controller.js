@@ -19,6 +19,25 @@ export async function getMyStore(req, res, next) {
   }
 }
 
+export async function updateStore(req, res, next) {
+  try {
+    const { storeName, description, addressDetail } = req.body;
+    const updates = Object.fromEntries(
+      Object.entries({ storeName, description, addressDetail }).filter(([, v]) => v !== undefined)
+    );
+
+    const store = await storeService.updateStore({
+      storeId: req.params.id,
+      sellerId: req.user._id,
+      updates,
+    });
+
+    return sendSuccess(res, { store }, "Store updated");
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function createStore(req, res, next) {
   try {
     const { storeName, description, addressDetail } = req.body;
