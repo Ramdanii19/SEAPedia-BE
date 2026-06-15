@@ -7,5 +7,6 @@ import * as reportController from "../controllers/report.controller.js";
 const router = Router();
 
 router.get("/buyer/spending", protect, requireRole(ROLES.BUYER), reportController.getBuyerSpending);
+router.get("/seller/revenue", protect, requireRole(ROLES.SELLER), reportController.getSellerRevenue);
 
 export default router;
