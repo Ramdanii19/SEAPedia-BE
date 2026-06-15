@@ -10,5 +10,6 @@ const router = Router();
 
 router.post("/items", protect, requireRole(ROLES.BUYER), addToCartValidator, validate, cartController.addToCart);
 router.patch("/items/:productId", protect, requireRole(ROLES.BUYER), updateItemQuantityValidator, validate, cartController.updateItemQuantity);
+router.delete("/items/:productId", protect, requireRole(ROLES.BUYER), cartController.removeItem);
 
 export default router;

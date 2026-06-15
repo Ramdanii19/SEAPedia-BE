@@ -2,6 +2,23 @@ import Cart from "../models/cart.model.js";
 import Product from "../models/product.model.js";
 import { ApiError } from "../utils/ApiError.js";
 
+export async function removeItem({ buyerId, productId }) {
+  const cart = await Cart.findOne({ buyer: buyerId });
+  if (!cart) throw new ApiError(404, "Cart not found");
+
+  const index = cart.items.findIndex((i) => i.product.equals(productId));
+  if (index === -1) throw new ApiError(404, "Item not found in cart");
+
+  cart.items.splice(index, 1);
+
+  if (cart.items.length === 0) {
+    cart.store = null;
+  }
+
+  await cart.save();
+  return cart.populate([{ path: "store", select: "storeName" }, { path: "items.product", select: "name price imageUrl" }]);
+}
+
 export async function updateItemQuantity({ buyerId, productId, quantity }) {
   const [cart, product] = await Promise.all([
     Cart.findOne({ buyer: buyerId }),
