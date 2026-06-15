@@ -5,6 +5,7 @@ import * as reviewController from "../controllers/review.controller.js";
 
 const router = Router();
 
+router.get("/", reviewController.listReviews);
 router.post("/", createReviewValidator, validate, reviewController.createReview);
 
 export default router;
