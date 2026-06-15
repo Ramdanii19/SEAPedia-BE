@@ -1,6 +1,24 @@
 import * as storeService from "../services/store.service.js";
 import { sendSuccess } from "../utils/response.js";
 
+export async function getStoreById(req, res, next) {
+  try {
+    const store = await storeService.getStoreById(req.params.id);
+    return sendSuccess(res, { store });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getMyStore(req, res, next) {
+  try {
+    const store = await storeService.getMyStore(req.user._id);
+    return sendSuccess(res, { store });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function createStore(req, res, next) {
   try {
     const { storeName, description, addressDetail } = req.body;

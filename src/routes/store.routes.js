@@ -8,6 +8,10 @@ import * as storeController from "../controllers/store.controller.js";
 
 const router = Router();
 
+// /me/store harus di atas /:id agar "me" tidak ditangkap sebagai param id
+router.get("/me/store", protect, requireRole(ROLES.SELLER), storeController.getMyStore);
+router.get("/:id", storeController.getStoreById);
+
 router.post(
   "/",
   protect,

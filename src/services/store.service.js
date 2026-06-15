@@ -1,6 +1,18 @@
 import Store from "../models/store.model.js";
 import { ApiError } from "../utils/ApiError.js";
 
+export async function getStoreById(id) {
+  const store = await Store.findById(id).populate("seller", "fullName email");
+  if (!store) throw new ApiError(404, "Store not found");
+  return store;
+}
+
+export async function getMyStore(sellerId) {
+  const store = await Store.findOne({ seller: sellerId });
+  if (!store) throw new ApiError(404, "You don't have a store yet");
+  return store;
+}
+
 export async function createStore({ sellerId, storeName, description, addressDetail }) {
   const existing = await Store.findOne({ seller: sellerId });
   if (existing) {
