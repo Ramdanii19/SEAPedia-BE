@@ -8,6 +8,9 @@ import addressRoutes from "./address.routes.js";
 import cartRoutes from "./cart.routes.js";
 import checkoutRoutes from "./checkout.routes.js";
 import orderRoutes from "./order.routes.js";
+import discountRoutes from "./discount.routes.js";
+import voucherRoutes from "./voucher.routes.js";
+import promoRoutes from "./promo.routes.js";
 
 const router = Router();
 
@@ -24,5 +27,8 @@ router.use("/addresses", addressRoutes);
 router.use("/cart", cartRoutes);
 router.use("/checkout", checkoutRoutes);
 router.use("/orders", orderRoutes);
+router.use("/admin", discountRoutes);
+router.use("/vouchers", voucherRoutes);
+router.use("/promos", promoRoutes);
 
 export default router;

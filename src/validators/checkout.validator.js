@@ -9,4 +9,14 @@ export const checkoutValidator = [
   body("deliveryMethod")
     .notEmpty().withMessage("Delivery method is required")
     .isIn(Object.values(DELIVERY_METHOD)).withMessage("Invalid delivery method"),
+
+  body("voucherCode")
+    .optional()
+    .trim()
+    .notEmpty().withMessage("Voucher code cannot be empty if provided"),
+
+  body("promoCode")
+    .optional()
+    .trim()
+    .notEmpty().withMessage("Promo code cannot be empty if provided"),
 ];
