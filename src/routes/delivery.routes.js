@@ -7,5 +7,6 @@ import * as deliveryController from "../controllers/delivery.controller.js";
 const router = Router();
 
 router.get("/jobs/available", protect, requireRole(ROLES.DRIVER), deliveryController.listAvailableJobs);
+router.get("/jobs/:id", protect, requireRole(ROLES.DRIVER), deliveryController.getJobDetail);
 
 export default router;
