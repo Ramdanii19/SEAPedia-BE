@@ -1,6 +1,15 @@
 import * as deliveryService from "../services/delivery.service.js";
 import { sendSuccess } from "../utils/response.js";
 
+export async function takeJob(req, res, next) {
+  try {
+    const job = await deliveryService.takeJob({ jobId: req.params.id, driverId: req.user._id });
+    return sendSuccess(res, { job }, "Job taken successfully");
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getJobDetail(req, res, next) {
   try {
     const job = await deliveryService.getJobDetail(req.params.id);

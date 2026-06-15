@@ -8,5 +8,6 @@ const router = Router();
 
 router.get("/jobs/available", protect, requireRole(ROLES.DRIVER), deliveryController.listAvailableJobs);
 router.get("/jobs/:id", protect, requireRole(ROLES.DRIVER), deliveryController.getJobDetail);
+router.patch("/jobs/:id/take", protect, requireRole(ROLES.DRIVER), deliveryController.takeJob);
 
 export default router;

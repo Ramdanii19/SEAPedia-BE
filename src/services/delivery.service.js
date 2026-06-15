@@ -1,6 +1,30 @@
 import DeliveryJob from "../models/deliveryJob.model.js";
+import Order from "../models/order.model.js";
 import { ApiError } from "../utils/ApiError.js";
-import { DELIVERY_JOB_STATUS } from "../constants/enums.js";
+import { DELIVERY_JOB_STATUS, ORDER_STATUS } from "../constants/enums.js";
+
+export async function takeJob({ jobId, driverId }) {
+  // Atomic: filter status AVAILABLE memastikan hanya 1 driver berhasil update
+  const job = await DeliveryJob.findOneAndUpdate(
+    { _id: jobId, status: DELIVERY_JOB_STATUS.AVAILABLE },
+    {
+      $set: {
+        driver: driverId,
+        status: DELIVERY_JOB_STATUS.TAKEN,
+        takenAt: new Date(),
+      },
+    },
+    { new: true }
+  );
+
+  if (!job) throw new ApiError(409, "Job tidak tersedia atau sudah diambil driver lain");
+
+  const order = await Order.findById(job.order);
+  order.pushStatus(ORDER_STATUS.DELIVERING, "Picked up by driver");
+  await order.save();
+
+  return job;
+}
 
 export async function getJobDetail(jobId) {
   const job = await DeliveryJob.findById(jobId).populate({
