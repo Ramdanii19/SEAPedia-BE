@@ -12,6 +12,20 @@ export async function login(req, res, next) {
   }
 }
 
+export function getMe(req, res) {
+  const { user } = req;
+  return sendSuccess(res, {
+    user,
+    roles: user.roles,
+    activeRole: user.activeRole,
+    financialSummary: {
+      walletBalance: 0,
+      sellerRevenue: 0,
+      driverEarning: 0,
+    },
+  });
+}
+
 export async function selectActiveRole(req, res, next) {
   try {
     const { role } = req.body;
