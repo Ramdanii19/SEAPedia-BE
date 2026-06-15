@@ -2,6 +2,7 @@ import { Router } from "express";
 import authRoutes from "./auth.routes.js";
 import reviewRoutes from "./review.routes.js";
 import storeRoutes from "./store.routes.js";
+import productRoutes from "./product.routes.js";
 
 const router = Router();
 
@@ -12,5 +13,6 @@ router.get("/health", (req, res) => {
 router.use("/auth", authRoutes);
 router.use("/reviews", reviewRoutes);
 router.use("/stores", storeRoutes);
+router.use("/products", productRoutes);
 
 export default router;
