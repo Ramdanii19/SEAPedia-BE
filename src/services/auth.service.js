@@ -1,6 +1,21 @@
 import User from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { signToken } from "../utils/jwt.js";
+import { ROLES } from "../constants/enums.js";
+
+export async function login({ email, password }) {
+  const user = await User.findOne({ email }).select("+password");
+  if (!user || !(await user.comparePassword(password))) {
+    throw new ApiError(401, "Invalid email or password");
+  }
+
+  const nonAdminRoles = user.roles.filter((r) => r !== ROLES.ADMIN);
+  const needRoleSelection = nonAdminRoles.length > 1 && !user.activeRole;
+
+  const token = signToken({ id: user._id });
+
+  return { user, token, roles: user.roles, needRoleSelection };
+}
 
 export async function register({ fullName, email, password, roles }) {
   const existing = await User.findOne({ email });
