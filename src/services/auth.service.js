@@ -17,6 +17,20 @@ export async function login({ email, password }) {
   return { user, token, roles: user.roles, needRoleSelection };
 }
 
+export async function selectActiveRole({ userId, role }) {
+  const user = await User.findById(userId);
+  if (!user.roles.includes(role)) {
+    throw new ApiError(403, `Role '${role}' is not assigned to this account`);
+  }
+
+  user.activeRole = role;
+  await user.save();
+
+  const token = signToken({ id: user._id });
+
+  return { user, token };
+}
+
 export async function register({ fullName, email, password, roles }) {
   const existing = await User.findOne({ email });
   if (existing) {

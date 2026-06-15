@@ -12,6 +12,17 @@ export async function login(req, res, next) {
   }
 }
 
+export async function selectActiveRole(req, res, next) {
+  try {
+    const { role } = req.body;
+    const { user, token } = await authService.selectActiveRole({ userId: req.user._id, role });
+
+    return sendSuccess(res, { user, token }, "Active role updated");
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function register(req, res, next) {
   try {
     const { fullName, email, password, roles } = req.body;

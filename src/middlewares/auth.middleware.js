@@ -2,6 +2,13 @@ import { verifyToken } from "../utils/jwt.js";
 import { ApiError } from "../utils/ApiError.js";
 import User from "../models/user.model.js";
 
+export function requireActiveRole(req, res, next) {
+  if (!req.user?.activeRole) {
+    return next(new ApiError(403, "Please select an active role before continuing"));
+  }
+  next();
+}
+
 export async function protect(req, res, next) {
   try {
     const authHeader = req.headers.authorization;

@@ -3,6 +3,12 @@ import { ROLES } from "../constants/enums.js";
 
 const ALLOWED_ROLES = [ROLES.SELLER, ROLES.BUYER, ROLES.DRIVER];
 
+export const selectActiveRoleValidator = [
+  body("role")
+    .notEmpty().withMessage("Role is required")
+    .isIn(ALLOWED_ROLES).withMessage("Invalid role"),
+];
+
 export const loginValidator = [
   body("email")
     .trim()
