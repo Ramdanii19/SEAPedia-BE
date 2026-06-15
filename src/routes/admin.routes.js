@@ -24,7 +24,14 @@ router.get("/promos",        ...adminGuard, adminController.listPromos);
 router.get("/delivery-jobs", ...adminGuard, adminController.listDeliveryJobs);
 
 // Discount management (moved here from discount.routes.js for cohesion)
-router.post("/vouchers", ...adminGuard, createVoucherValidator, validate, discountController.createVoucher);
-router.post("/promos",   ...adminGuard, createPromoValidator,   validate, discountController.createPromo);
+router.post("/vouchers",      ...adminGuard, createVoucherValidator, validate, discountController.createVoucher);
+router.get("/vouchers/:id",  ...adminGuard, adminController.getVoucherDetail);
+router.patch("/vouchers/:id",...adminGuard, adminController.updateVoucher);
+router.delete("/vouchers/:id",...adminGuard, adminController.deleteVoucher);
+
+router.post("/promos",       ...adminGuard, createPromoValidator, validate, discountController.createPromo);
+router.get("/promos/:id",    ...adminGuard, adminController.getPromoDetail);
+router.patch("/promos/:id",  ...adminGuard, adminController.updatePromo);
+router.delete("/promos/:id", ...adminGuard, adminController.deletePromo);
 
 export default router;
