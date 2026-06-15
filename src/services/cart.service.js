@@ -2,6 +2,21 @@ import Cart from "../models/cart.model.js";
 import Product from "../models/product.model.js";
 import { ApiError } from "../utils/ApiError.js";
 
+export async function getCart(buyerId) {
+  const cart = await Cart.findOneAndUpdate(
+    { buyer: buyerId },
+    { $setOnInsert: { buyer: buyerId, store: null, items: [] } },
+    { new: true, upsert: true }
+  ).populate([
+    { path: "store", select: "storeName addressDetail" },
+    { path: "items.product", select: "name price imageUrl stock" },
+  ]);
+
+  const subtotal = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+
+  return { cart, subtotal, totalItems: cart.items.length };
+}
+
 export async function removeItem({ buyerId, productId }) {
   const cart = await Cart.findOne({ buyer: buyerId });
   if (!cart) throw new ApiError(404, "Cart not found");

@@ -1,6 +1,15 @@
 import * as cartService from "../services/cart.service.js";
 import { sendSuccess } from "../utils/response.js";
 
+export async function getCart(req, res, next) {
+  try {
+    const result = await cartService.getCart(req.user._id);
+    return sendSuccess(res, result);
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function removeItem(req, res, next) {
   try {
     const cart = await cartService.removeItem({ buyerId: req.user._id, productId: req.params.productId });

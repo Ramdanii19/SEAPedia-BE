@@ -8,6 +8,7 @@ import * as cartController from "../controllers/cart.controller.js";
 
 const router = Router();
 
+router.get("/", protect, requireRole(ROLES.BUYER), cartController.getCart);
 router.post("/items", protect, requireRole(ROLES.BUYER), addToCartValidator, validate, cartController.addToCart);
 router.patch("/items/:productId", protect, requireRole(ROLES.BUYER), updateItemQuantityValidator, validate, cartController.updateItemQuantity);
 router.delete("/items/:productId", protect, requireRole(ROLES.BUYER), cartController.removeItem);
