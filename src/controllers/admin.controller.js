@@ -1,5 +1,13 @@
 import * as adminService from "../services/admin.service.js";
+import { processLateOrders } from "../services/lateHandling.service.js";
 import { sendSuccess } from "../utils/response.js";
+
+export async function processLateOrdersHandler(req, res, next) {
+  try {
+    const results = await processLateOrders();
+    return sendSuccess(res, results, `Processed ${results.processed} late order(s)`);
+  } catch (err) { next(err); }
+}
 
 export async function simulateNextDay(req, res, next) {
   try {
