@@ -1,7 +1,38 @@
 import DeliveryJob from "../models/deliveryJob.model.js";
 import Order from "../models/order.model.js";
+import Wallet from "../models/wallet.model.js";
+import WalletTransaction from "../models/walletTransaction.model.js";
 import { ApiError } from "../utils/ApiError.js";
-import { DELIVERY_JOB_STATUS, ORDER_STATUS } from "../constants/enums.js";
+import { DELIVERY_JOB_STATUS, ORDER_STATUS, WALLET_TX_TYPE } from "../constants/enums.js";
+import { getOrCreateWallet } from "./wallet.service.js";
+
+export async function completeJob({ jobId, driverId }) {
+  const job = await DeliveryJob.findById(jobId);
+  if (!job) throw new ApiError(404, "Delivery job not found");
+  if (!job.driver.equals(driverId)) throw new ApiError(403, "This job is not assigned to you");
+  if (job.status !== DELIVERY_JOB_STATUS.TAKEN) {
+    throw new ApiError(400, `Job cannot be completed from status '${job.status}'`);
+  }
+
+  job.status = DELIVERY_JOB_STATUS.COMPLETED;
+  job.completedAt = new Date();
+  await job.save();
+
+  const order = await Order.findById(job.order);
+  order.pushStatus(ORDER_STATUS.COMPLETED, "Delivered by driver");
+  await order.save();
+
+  const wallet = await getOrCreateWallet(driverId);
+  await Wallet.findByIdAndUpdate(wallet._id, { $inc: { balance: job.earning } });
+  await WalletTransaction.create({
+    wallet: wallet._id,
+    type: WALLET_TX_TYPE.EARNING,
+    amount: job.earning,
+    description: `Penghasilan pengiriman order #${order._id}`,
+  });
+
+  return job;
+}
 
 export async function takeJob({ jobId, driverId }) {
   // Atomic: filter status AVAILABLE memastikan hanya 1 driver berhasil update
