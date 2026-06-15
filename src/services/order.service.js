@@ -1,24 +1,9 @@
 import Order from "../models/order.model.js";
 import Store from "../models/store.model.js";
+import DeliveryJob from "../models/deliveryJob.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ORDER_STATUS } from "../constants/enums.js";
-
-export async function getOrderTimeline({ orderId, userId, activeRole }) {
-  const order = await Order.findById(orderId).select("statusHistory buyer store status");
-  if (!order) throw new ApiError(404, "Order not found");
-
-  if (activeRole === "BUYER") {
-    if (!order.buyer.equals(userId)) throw new ApiError(403, "Access denied");
-  } else if (activeRole === "SELLER") {
-    const store = await Store.findOne({ seller: userId });
-    if (!store || !order.store.equals(store._id)) throw new ApiError(403, "Access denied");
-  } else {
-    throw new ApiError(403, "Access denied");
-  }
-
-  const timeline = [...order.statusHistory].sort((a, b) => a.createdAt - b.createdAt);
-  return timeline;
-}
+import { DRIVER_EARNING_RATE } from "../constants/config.js";
 
 export async function processOrder({ orderId, sellerId }) {
   const store = await Store.findOne({ seller: sellerId });
@@ -33,6 +18,11 @@ export async function processOrder({ orderId, sellerId }) {
 
   order.pushStatus(ORDER_STATUS.WAITING_DELIVERY, "Order processed by seller");
   await order.save();
+
+  await DeliveryJob.create({
+    order: order._id,
+    earning: Math.round(order.deliveryFee * DRIVER_EARNING_RATE),
+  });
 
   return order;
 }

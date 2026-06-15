@@ -11,6 +11,8 @@ import { calculateOrderTotals } from "../utils/priceCalculator.js";
 import { getOrCreateWallet } from "./wallet.service.js";
 import { validateDiscount } from "./discount.service.js";
 import { WALLET_TX_TYPE } from "../constants/enums.js";
+import { SLA_HOURS } from "../constants/config.js";
+import { getCurrentTime } from "./systemTime.service.js";
 
 // Aturan kombinasi diskon:
 // Voucher dan promo BOLEH digabung dalam satu checkout.
@@ -109,6 +111,7 @@ export async function checkout({ buyerId, addressId, deliveryMethod, voucherCode
         deliveryMethod,
         voucher:              voucherResult?.id ?? null,
         promo:                promoResult?.id ?? null,
+        expiredAt:            new Date((await getCurrentTime()).getTime() + SLA_HOURS[deliveryMethod] * 60 * 60 * 1000),
         ...totals,
       }],
       { session }

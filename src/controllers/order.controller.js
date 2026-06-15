@@ -1,19 +1,6 @@
 import * as orderService from "../services/order.service.js";
 import { sendSuccess } from "../utils/response.js";
 
-export async function getOrderTimeline(req, res, next) {
-  try {
-    const timeline = await orderService.getOrderTimeline({
-      orderId: req.params.id,
-      userId: req.user._id,
-      activeRole: req.user.activeRole,
-    });
-    return sendSuccess(res, { timeline });
-  } catch (err) {
-    next(err);
-  }
-}
-
 export async function processOrder(req, res, next) {
   try {
     const order = await orderService.processOrder({ orderId: req.params.id, sellerId: req.user._id });
