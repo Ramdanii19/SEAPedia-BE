@@ -1,6 +1,8 @@
 import User from "../models/user.model.js";
+import { ApiError } from "../utils/ApiError.js";
 import { ORDER_STATUS, DELIVERY_METHOD } from "../constants/enums.js";
 import { SLA_HOURS } from "../constants/config.js";
+import { advanceTime, getCurrentTime } from "./systemTime.service.js";
 import Store from "../models/store.model.js";
 import Product from "../models/product.model.js";
 import Order from "../models/order.model.js";
@@ -11,6 +13,27 @@ import DeliveryJob from "../models/deliveryJob.model.js";
 // Order dianggap overdue jika: status bukan COMPLETED/RETURNED
 // DAN waktu sejak createdAt melebihi SLA_HOURS[deliveryMethod].
 // Dipakai penuh di Branch 13 (notifikasi & auto-escalation).
+export async function simulateNextDay() {
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+  const newTime = await advanceTime(ONE_DAY_MS);
+
+  // Periksa order yang kini melewati SLA setelah waktu dimajukan
+  const terminalStatuses = [ORDER_STATUS.COMPLETED, ORDER_STATUS.RETURNED];
+  const now = newTime;
+
+  const slaConditions = Object.values(DELIVERY_METHOD).map((method) => ({
+    deliveryMethod: method,
+    createdAt: { $lt: new Date(now - SLA_HOURS[method] * 60 * 60 * 1000) },
+  }));
+
+  const overdueCount = await Order.countDocuments({
+    status: { $nin: terminalStatuses },
+    $or: slaConditions,
+  });
+
+  return { newSystemTime: newTime, overdueCount };
+}
+
 export async function listOverdueOrders({ page = 1, limit = 20 }) {
   const terminalStatuses = [ORDER_STATUS.COMPLETED, ORDER_STATUS.RETURNED];
   const now = new Date();
@@ -39,6 +62,56 @@ export async function listOverdueOrders({ page = 1, limit = 20 }) {
   ]);
 
   return { orders, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+}
+
+export async function getVoucherDetail(id) {
+  const voucher = await Voucher.findById(id);
+  if (!voucher) throw new ApiError(404, "Voucher not found");
+  return voucher;
+}
+
+export async function updateVoucher(id, updates) {
+  const voucher = await Voucher.findById(id);
+  if (!voucher) throw new ApiError(404, "Voucher not found");
+  if (updates.code) updates.code = updates.code.toUpperCase();
+  Object.assign(voucher, updates);
+  try {
+    await voucher.save();
+    return voucher;
+  } catch (err) {
+    if (err.code === 11000) throw new ApiError(409, "Voucher code already exists");
+    throw err;
+  }
+}
+
+export async function deleteVoucher(id) {
+  const voucher = await Voucher.findByIdAndDelete(id);
+  if (!voucher) throw new ApiError(404, "Voucher not found");
+}
+
+export async function getPromoDetail(id) {
+  const promo = await Promo.findById(id);
+  if (!promo) throw new ApiError(404, "Promo not found");
+  return promo;
+}
+
+export async function updatePromo(id, updates) {
+  const promo = await Promo.findById(id);
+  if (!promo) throw new ApiError(404, "Promo not found");
+  if (updates.code) updates.code = updates.code.toUpperCase();
+  Object.assign(promo, updates);
+  try {
+    await promo.save();
+    return promo;
+  } catch (err) {
+    if (err.code === 11000) throw new ApiError(409, "Promo code already exists");
+    throw err;
+  }
+}
+
+export async function deletePromo(id) {
+  const promo = await Promo.findByIdAndDelete(id);
+  if (!promo) throw new ApiError(404, "Promo not found");
 }
 
 export async function listVouchers({ page = 1, limit = 20 }) {
