@@ -10,6 +10,27 @@ export function requireActiveRole(req, res, next) {
   next();
 }
 
+export async function optionalProtect(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) return next();
+
+    const token = authHeader.split(" ")[1];
+    const decoded = verifyToken(token);
+
+    if (!isBlacklisted(decoded.jti)) {
+      const user = await User.findById(decoded.id);
+      if (user) {
+        req.user = user;
+        req.tokenPayload = decoded;
+      }
+    }
+    next();
+  } catch {
+    next();
+  }
+}
+
 export async function protect(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
