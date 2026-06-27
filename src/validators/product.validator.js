@@ -19,9 +19,9 @@ export const updateProductValidator = [
     .trim(),
 
   body("imageUrl")
-    .optional()
+    .optional({ checkFalsy: true })
     .trim()
-    .isURL().withMessage("Image URL must be a valid URL"),
+    .isURL({ require_tld: false }).withMessage("Image URL must be a valid URL"),
 ];
 
 export const createProductValidator = [
@@ -42,7 +42,7 @@ export const createProductValidator = [
     .trim(),
 
   body("imageUrl")
-    .optional()
+    .optional({ checkFalsy: true })
     .trim()
-    .isURL().withMessage("Image URL must be a valid URL"),
+    .isURL({ require_tld: false }).withMessage("Image URL must be a valid URL"),
 ];

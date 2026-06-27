@@ -4,16 +4,24 @@ import cors from "cors";
 import morgan from "morgan";
 import mongoSanitize from "express-mongo-sanitize";
 import swaggerUi from "swagger-ui-express";
+import path from "path";
+import { fileURLToPath } from "url";
+import { mkdirSync } from "fs";
 
 import router from "./routes/index.js";
 import { swaggerSpec } from "./docs/swagger.js";
 import { notFound, errorHandler } from "./middlewares/error.middleware.js";
 import { env } from "./config/env.js";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const uploadsDir = path.join(__dirname, "../uploads");
+mkdirSync(uploadsDir, { recursive: true });
+
 const app = express();
 
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(cors());
+app.use("/uploads", express.static(uploadsDir));
 app.use(express.json());
 app.use((req, res, next) => {
   if (req.body) req.body = mongoSanitize.sanitize(req.body);
