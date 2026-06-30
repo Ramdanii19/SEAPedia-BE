@@ -8,5 +8,6 @@ const router = Router();
 
 router.get("/buyer/spending", protect, requireRole(ROLES.BUYER), reportController.getBuyerSpending);
 router.get("/seller/revenue", protect, requireRole(ROLES.SELLER), reportController.getSellerRevenue);
+router.get("/admin",          protect, requireRole(ROLES.ADMIN), reportController.getAdminReport);
 
 export default router;

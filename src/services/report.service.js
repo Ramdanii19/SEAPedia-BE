@@ -1,5 +1,7 @@
 import Order from "../models/order.model.js";
 import Store from "../models/store.model.js";
+import User from "../models/user.model.js";
+import DeliveryJob from "../models/deliveryJob.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ORDER_STATUS } from "../constants/enums.js";
 
@@ -73,6 +75,86 @@ export async function getSellerRevenue(sellerId) {
     countByStatus,
     monthlyTrend,
     orders: orderSummary,
+  };
+}
+
+export async function getAdminReport() {
+  const MONTH_NAMES = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+  const now = new Date();
+  const curYear  = now.getFullYear();
+  const curMonth = now.getMonth();
+
+  const [allOrders, totalUsers, totalStores, totalDeliveries] = await Promise.all([
+    Order.find()
+      .select("status subtotal discountAmount finalTotal createdAt buyer store")
+      .populate("buyer", "fullName")
+      .populate("store", "storeName")
+      .sort({ createdAt: -1 }),
+    User.countDocuments(),
+    Store.countDocuments(),
+    DeliveryJob.countDocuments(),
+  ]);
+
+  const completed = allOrders.filter((o) => o.status === ORDER_STATUS.COMPLETED);
+  const totalRevenue = completed.reduce((sum, o) => sum + (o.subtotal - o.discountAmount), 0);
+
+  const curMonthRevenue = completed
+    .filter((o) => { const d = new Date(o.createdAt); return d.getFullYear() === curYear && d.getMonth() === curMonth; })
+    .reduce((sum, o) => sum + (o.subtotal - o.discountAmount), 0);
+
+  const prevMonth     = curMonth === 0 ? 11 : curMonth - 1;
+  const prevMonthYear = curMonth === 0 ? curYear - 1 : curYear;
+  const prevMonthRevenue = completed
+    .filter((o) => { const d = new Date(o.createdAt); return d.getFullYear() === prevMonthYear && d.getMonth() === prevMonth; })
+    .reduce((sum, o) => sum + (o.subtotal - o.discountAmount), 0);
+
+  const countByStatus = Object.values(ORDER_STATUS).reduce((acc, s) => ({ ...acc, [s]: 0 }), {});
+  allOrders.forEach((o) => { if (countByStatus[o.status] !== undefined) countByStatus[o.status]++; });
+
+  const monthlyTrend = Array.from({ length: 6 }, (_, i) => {
+    const mIdx = ((curMonth - 5 + i) % 12 + 12) % 12;
+    const yIdx = curYear - Math.floor((5 - i + (11 - curMonth)) / 12);
+    const revenue = completed
+      .filter((o) => { const d = new Date(o.createdAt); return d.getFullYear() === yIdx && d.getMonth() === mIdx; })
+      .reduce((sum, o) => sum + (o.subtotal - o.discountAmount), 0);
+    const orders = allOrders.filter((o) => { const d = new Date(o.createdAt); return d.getFullYear() === yIdx && d.getMonth() === mIdx; }).length;
+    return { month: MONTH_NAMES[mIdx], revenue, orders };
+  });
+
+  // Top 5 sellers by revenue
+  const storeMap = {};
+  completed.forEach((o) => {
+    const key = o.store?._id?.toString() ?? "unknown";
+    if (!storeMap[key]) storeMap[key] = { storeName: o.store?.storeName ?? "—", revenue: 0, orders: 0 };
+    storeMap[key].revenue += o.subtotal - o.discountAmount;
+    storeMap[key].orders  += 1;
+  });
+  const topSellers = Object.values(storeMap).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+
+  const recentOrders = allOrders.slice(0, 10).map((o) => ({
+    orderId:   o._id,
+    buyerName: o.buyer?.fullName ?? "—",
+    storeName: o.store?.storeName ?? "—",
+    status:    o.status,
+    finalTotal: o.finalTotal,
+    createdAt: o.createdAt,
+  }));
+
+  return {
+    totals: {
+      totalRevenue,
+      totalOrders: allOrders.length,
+      completedOrders: completed.length,
+      totalUsers,
+      totalStores,
+      totalDeliveries,
+      curMonthRevenue,
+      prevMonthRevenue,
+    },
+    countByStatus,
+    monthlyTrend,
+    topSellers,
+    recentOrders,
   };
 }
 

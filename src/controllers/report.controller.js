@@ -10,6 +10,15 @@ export async function getSellerRevenue(req, res, next) {
   }
 }
 
+export async function getAdminReport(req, res, next) {
+  try {
+    const result = await reportService.getAdminReport();
+    return sendSuccess(res, result);
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getBuyerSpending(req, res, next) {
   try {
     const result = await reportService.getBuyerSpending(req.user._id);
