@@ -15,5 +15,6 @@ router.get("/", protect, requireRole(ROLES.BUYER), cartController.getCart);
 router.post("/items", protect, requireRole(ROLES.BUYER), addToCartValidator, validate, cartController.addToCart);
 router.patch("/items/:productId", protect, requireRole(ROLES.BUYER), productIdParam, updateItemQuantityValidator, validate, cartController.updateItemQuantity);
 router.delete("/items/:productId", protect, requireRole(ROLES.BUYER), productIdParam, validate, cartController.removeItem);
+router.delete("/", protect, requireRole(ROLES.BUYER), cartController.clearCart);
 
 export default router;

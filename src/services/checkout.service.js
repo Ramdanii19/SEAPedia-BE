@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import Cart from "../models/cart.model.js";
 import Product from "../models/product.model.js";
 import Address from "../models/address.model.js";
@@ -65,83 +64,69 @@ export async function checkout({ buyerId, addressId, deliveryMethod, voucherCode
     throw new ApiError(400, `Saldo dompet tidak cukup. Saldo: Rp${wallet.balance.toLocaleString("id-ID")}, dibutuhkan: Rp${totals.finalTotal.toLocaleString("id-ID")}`);
   }
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    for (const item of cart.items) {
-      await Product.findOneAndUpdate(
-        { _id: item.product._id, stock: { $gte: item.quantity } },
-        { $inc: { stock: -item.quantity } },
-        { session }
-      ).orFail(new ApiError(400, `Stok "${item.product.name}" habis saat proses checkout`));
-    }
-
-    await Wallet.findOneAndUpdate(
-      { _id: wallet._id, balance: { $gte: totals.finalTotal } },
-      { $inc: { balance: -totals.finalTotal } },
-      { session }
-    ).orFail(new ApiError(400, "Saldo dompet tidak mencukupi"));
-
-    await WalletTransaction.create(
-      [{ wallet: wallet._id, type: WALLET_TX_TYPE.PAYMENT, amount: totals.finalTotal, description: "Pembayaran order" }],
-      { session }
+  for (const item of cart.items) {
+    const updated = await Product.findOneAndUpdate(
+      { _id: item.product._id, stock: { $gte: item.quantity } },
+      { $inc: { stock: -item.quantity } }
     );
-
-    if (voucherResult) {
-      await Voucher.findByIdAndUpdate(voucherResult.id, { $inc: { remainingUsage: -1 } }, { session });
-    }
-
-    const orderItems = cart.items.map((item) => ({
-      product:     item.product._id,
-      productName: item.product.name,
-      price:       item.product.price,
-      quantity:    item.quantity,
-      subtotal:    item.product.price * item.quantity,
-    }));
-
-    const [order] = await Order.create(
-      [{
-        buyer:                buyerId,
-        store:                cart.store,
-        shippingRecipientName: address.recipientName,
-        shippingPhone:        address.phone,
-        shippingAddress:      address.addressDetail,
-        items:                orderItems,
-        deliveryMethod,
-        voucher:              voucherResult?.id ?? null,
-        promo:                promoResult?.id ?? null,
-        expiredAt:            new Date((await getCurrentTime()).getTime() + SLA_HOURS[deliveryMethod] * 60 * 60 * 1000),
-        ...totals,
-      }],
-      { session }
-    );
-
-    order.pushStatus(order.status, "Order placed");
-    await order.save({ session });
-
-    await Cart.findOneAndUpdate(
-      { buyer: buyerId },
-      { $set: { items: [], store: null } },
-      { session }
-    );
-
-    await session.commitTransaction();
-
-    return {
-      order,
-      summary: {
-        subtotal:       totals.subtotal,
-        discountAmount: totals.discountAmount,
-        deliveryFee:    totals.deliveryFee,
-        ppnAmount:      totals.ppnAmount,
-        finalTotal:     totals.finalTotal,
-      },
-    };
-  } catch (err) {
-    await session.abortTransaction();
-    throw err;
-  } finally {
-    session.endSession();
+    if (!updated) throw new ApiError(400, `Stok "${item.product.name}" habis saat proses checkout`);
   }
+
+  const updatedWallet = await Wallet.findOneAndUpdate(
+    { _id: wallet._id, balance: { $gte: totals.finalTotal } },
+    { $inc: { balance: -totals.finalTotal } }
+  );
+  if (!updatedWallet) throw new ApiError(400, "Saldo dompet tidak mencukupi");
+
+  await WalletTransaction.create({
+    wallet: wallet._id,
+    type: WALLET_TX_TYPE.PAYMENT,
+    amount: totals.finalTotal,
+    description: "Pembayaran order",
+  });
+
+  if (voucherResult) {
+    await Voucher.findByIdAndUpdate(voucherResult.id, { $inc: { remainingUsage: -1 } });
+  }
+
+  const orderItems = cart.items.map((item) => ({
+    product:     item.product._id,
+    productName: item.product.name,
+    price:       item.product.price,
+    quantity:    item.quantity,
+    subtotal:    item.product.price * item.quantity,
+  }));
+
+  const order = await Order.create({
+    buyer:                buyerId,
+    store:                cart.store,
+    shippingRecipientName: address.recipientName,
+    shippingPhone:        address.phone,
+    shippingAddress:      address.addressDetail,
+    items:                orderItems,
+    deliveryMethod,
+    voucher:              voucherResult?.id ?? null,
+    promo:                promoResult?.id ?? null,
+    expiredAt:            new Date((await getCurrentTime()).getTime() + SLA_HOURS[deliveryMethod] * 60 * 60 * 1000),
+    ...totals,
+  });
+
+  order.pushStatus(order.status, "Order placed");
+  await order.save();
+
+  await Cart.findOneAndUpdate(
+    { buyer: buyerId },
+    { $set: { items: [], store: null } }
+  );
+
+  return {
+    order,
+    summary: {
+      subtotal:       totals.subtotal,
+      discountAmount: totals.discountAmount,
+      deliveryFee:    totals.deliveryFee,
+      ppnAmount:      totals.ppnAmount,
+      finalTotal:     totals.finalTotal,
+    },
+  };
 }

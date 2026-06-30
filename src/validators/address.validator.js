@@ -9,7 +9,7 @@ export const updateAddressValidator = [
   body("phone")
     .optional()
     .trim()
-    .isMobilePhone("id-ID").withMessage("Phone number must be a valid Indonesian number"),
+    .matches(/^(\+62|62|0)[0-9]{8,13}$/).withMessage("Nomor HP tidak valid (contoh: 081234567890)"),
 
   body("addressDetail")
     .optional()
@@ -29,7 +29,7 @@ export const createAddressValidator = [
   body("phone")
     .trim()
     .notEmpty().withMessage("Phone number is required")
-    .isMobilePhone("id-ID").withMessage("Phone number must be a valid Indonesian number"),
+    .matches(/^(\+62|62|0)[0-9]{8,13}$/).withMessage("Nomor HP tidak valid (contoh: 081234567890)"),
 
   body("addressDetail")
     .trim()

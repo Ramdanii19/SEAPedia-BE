@@ -56,6 +56,13 @@ export async function updateItemQuantity({ buyerId, productId, quantity }) {
   return cart.populate([{ path: "store", select: "storeName" }, { path: "items.product", select: "name price imageUrl" }]);
 }
 
+export async function clearCart(buyerId) {
+  await Cart.findOneAndUpdate(
+    { buyer: buyerId },
+    { $set: { items: [], store: null } }
+  );
+}
+
 export async function addToCart({ buyerId, productId, quantity }) {
   const product = await Product.findById(productId);
   if (!product) throw new ApiError(404, "Product not found");

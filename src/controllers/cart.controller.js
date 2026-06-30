@@ -32,6 +32,15 @@ export async function updateItemQuantity(req, res, next) {
   }
 }
 
+export async function clearCart(req, res, next) {
+  try {
+    await cartService.clearCart(req.user._id);
+    return sendSuccess(res, null, "Cart cleared");
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function addToCart(req, res, next) {
   try {
     const { productId, quantity } = req.body;
