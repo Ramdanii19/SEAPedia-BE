@@ -14,7 +14,7 @@ export async function getDriverDashboard(driverId) {
     DeliveryJob.findOne({ driver: driverId, status: DELIVERY_JOB_STATUS.TAKEN })
       .populate({ path: "order", select: "shippingAddress shippingRecipientName deliveryMethod store", populate: { path: "store", select: "storeName" } }),
     DeliveryJob.find({ driver: driverId })
-      .select("status earning takenAt completedAt order")
+      .select("status earning takenAt completedAt createdAt order")
       .populate({ path: "order", select: "shippingAddress deliveryMethod createdAt" })
       .sort({ createdAt: -1 }),
     getOrCreateWallet(driverId),
@@ -111,7 +111,7 @@ export async function listAvailableJobs({ page = 1, limit = 10 }) {
     DeliveryJob.find({ status: DELIVERY_JOB_STATUS.AVAILABLE })
       .populate({
         path: "order",
-        select: "shippingRecipientName shippingAddress deliveryMethod deliveryFee store",
+        select: "shippingRecipientName shippingAddress deliveryMethod deliveryFee finalTotal items store",
         populate: { path: "store", select: "storeName addressDetail" },
       })
       .sort({ createdAt: -1 })
