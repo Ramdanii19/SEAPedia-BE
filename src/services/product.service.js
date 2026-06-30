@@ -2,15 +2,19 @@ import Product from "../models/product.model.js";
 import Store from "../models/store.model.js";
 import { ApiError } from "../utils/ApiError.js";
 
-export async function listPublicProducts({ page = 1, limit = 10 }) {
+export async function listPublicProducts({ page = 1, limit = 10, search = "" }) {
   const skip = (page - 1) * limit;
+  const filter = search
+    ? { name: { $regex: search, $options: "i" } }
+    : {};
+
   const [products, total] = await Promise.all([
-    Product.find()
+    Product.find(filter)
       .populate("store", "storeName addressDetail")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),
-    Product.countDocuments(),
+    Product.countDocuments(filter),
   ]);
 
   return {

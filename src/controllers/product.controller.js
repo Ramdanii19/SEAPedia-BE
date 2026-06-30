@@ -5,7 +5,8 @@ export async function listPublicProducts(req, res, next) {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 10));
-    const result = await productService.listPublicProducts({ page, limit });
+    const search = (req.query.search ?? "").trim();
+    const result = await productService.listPublicProducts({ page, limit, search });
     return sendSuccess(res, result);
   } catch (err) {
     next(err);
