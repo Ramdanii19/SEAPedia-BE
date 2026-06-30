@@ -8,7 +8,8 @@ export async function getSellerRevenue(sellerId) {
   if (!store) throw new ApiError(404, "You don't have a store yet");
 
   const orders = await Order.find({ store: store._id })
-    .select("status subtotal discountAmount deliveryFee ppnAmount finalTotal createdAt")
+    .select("status subtotal discountAmount deliveryFee ppnAmount finalTotal createdAt buyer")
+    .populate("buyer", "fullName")
     .sort({ createdAt: -1 });
 
   const countByStatus = Object.values(ORDER_STATUS).reduce((acc, s) => ({ ...acc, [s]: 0 }), {});
@@ -17,13 +18,47 @@ export async function getSellerRevenue(sellerId) {
   const completedOrders = orders.filter((o) => o.status === ORDER_STATUS.COMPLETED);
   const totalRevenue = completedOrders.reduce((sum, o) => sum + o.subtotal - o.discountAmount, 0);
 
+  // Current month & previous month revenue
+  const now = new Date();
+  const curYear = now.getFullYear();
+  const curMonth = now.getMonth();
+  const curMonthRevenue = completedOrders
+    .filter((o) => {
+      const d = new Date(o.createdAt);
+      return d.getFullYear() === curYear && d.getMonth() === curMonth;
+    })
+    .reduce((sum, o) => sum + o.subtotal - o.discountAmount, 0);
+  const prevMonth = curMonth === 0 ? 11 : curMonth - 1;
+  const prevMonthYear = curMonth === 0 ? curYear - 1 : curYear;
+  const prevMonthRevenue = completedOrders
+    .filter((o) => {
+      const d = new Date(o.createdAt);
+      return d.getFullYear() === prevMonthYear && d.getMonth() === prevMonth;
+    })
+    .reduce((sum, o) => sum + o.subtotal - o.discountAmount, 0);
+
+  // Last 6 months trend
+  const MONTH_NAMES = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+  const monthlyTrend = Array.from({ length: 6 }, (_, i) => {
+    const mIdx = ((curMonth - 5 + i) % 12 + 12) % 12;
+    const yIdx = curYear - Math.floor((5 - i + (11 - curMonth)) / 12);
+    const revenue = completedOrders
+      .filter((o) => {
+        const d = new Date(o.createdAt);
+        return d.getFullYear() === yIdx && d.getMonth() === mIdx;
+      })
+      .reduce((sum, o) => sum + o.subtotal - o.discountAmount, 0);
+    return { month: MONTH_NAMES[mIdx], revenue };
+  });
+
   const orderSummary = orders.map((o) => ({
-    orderId:    o._id,
-    status:     o.status,
-    subtotal:   o.subtotal,
-    discount:   o.discountAmount,
-    finalTotal: o.finalTotal,
-    createdAt:  o.createdAt,
+    orderId:      o._id,
+    buyerName:    o.buyer?.fullName ?? "-",
+    status:       o.status,
+    subtotal:     o.subtotal,
+    discount:     o.discountAmount,
+    finalTotal:   o.finalTotal,
+    createdAt:    o.createdAt,
   }));
 
   return {
@@ -32,8 +67,11 @@ export async function getSellerRevenue(sellerId) {
       totalRevenue,
       totalOrders: orders.length,
       completedOrders: completedOrders.length,
+      curMonthRevenue,
+      prevMonthRevenue,
     },
     countByStatus,
+    monthlyTrend,
     orders: orderSummary,
   };
 }
