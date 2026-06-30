@@ -15,6 +15,7 @@ import deliveryRoutes from "./delivery.routes.js";
 import voucherRoutes from "./voucher.routes.js";
 import promoRoutes from "./promo.routes.js";
 import uploadRoutes from "./upload.routes.js";
+import wishlistRoutes from "./wishlist.routes.js";
 
 const router = Router();
 
@@ -38,5 +39,6 @@ router.use("/delivery", deliveryRoutes);
 router.use("/vouchers", voucherRoutes);
 router.use("/promos", promoRoutes);
 router.use("/upload", uploadRoutes);
+router.use("/wishlist", wishlistRoutes);
 
 export default router;
