@@ -31,6 +31,31 @@ export async function selectActiveRole({ userId, role }) {
   return { user, token };
 }
 
+export async function loginWithGoogle({ googleId, email, fullName }) {
+  let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+  if (user) {
+    if (!user.googleId) {
+      user.googleId = googleId;
+      await user.save();
+    }
+  } else {
+    user = await User.create({
+      fullName,
+      email,
+      googleId,
+      roles: [ROLES.BUYER],
+      activeRole: ROLES.BUYER,
+    });
+  }
+
+  const nonAdminRoles = user.roles.filter((r) => r !== ROLES.ADMIN);
+  const needRoleSelection = nonAdminRoles.length > 1 && !user.activeRole;
+  const token = signToken({ id: user._id });
+
+  return { user, token, needRoleSelection };
+}
+
 export async function register({ fullName, email, password, roles }) {
   const existing = await User.findOne({ email });
   if (existing) {
