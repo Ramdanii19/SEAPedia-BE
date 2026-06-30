@@ -24,6 +24,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       sparse: true,
     },
+    passwordResetCode: {
+      type: String,
+      select: false,
+    },
+    passwordResetExpiry: {
+      type: Date,
+      select: false,
+    },
     roles: {
       type: [{ type: String, enum: Object.values(ROLES) }],
       default: [ROLES.BUYER],

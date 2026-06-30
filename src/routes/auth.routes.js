@@ -134,6 +134,9 @@ router.get("/me", protect, authController.getMe);
  */
 router.post("/logout", protect, authController.logout);
 
+router.post("/forgot-password", authController.forgotPassword);
+router.post("/reset-password", authController.resetPassword);
+
 router.get("/google", authController.googleAuth);
 router.get("/google/callback", authController.googleCallback);
 

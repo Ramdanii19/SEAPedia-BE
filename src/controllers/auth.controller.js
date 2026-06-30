@@ -49,6 +49,25 @@ export async function selectActiveRole(req, res, next) {
   }
 }
 
+export async function forgotPassword(req, res, next) {
+  try {
+    await authService.forgotPassword({ email: req.body.email });
+    return sendSuccess(res, null, "Jika email terdaftar, kode reset telah dikirim");
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function resetPassword(req, res, next) {
+  try {
+    const { email, code, newPassword } = req.body;
+    await authService.resetPassword({ email, code, newPassword });
+    return sendSuccess(res, null, "Password berhasil direset");
+  } catch (err) {
+    next(err);
+  }
+}
+
 export function googleAuth(req, res) {
   const params = new URLSearchParams({
     client_id: env.googleClientId,
