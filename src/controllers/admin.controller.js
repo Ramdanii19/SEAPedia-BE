@@ -78,6 +78,28 @@ export async function listDeliveryJobs(req, res, next) {
   } catch (err) { next(err); }
 }
 
+export async function createUser(req, res, next) {
+  try {
+    const { fullName, email, password, roles, activeRole } = req.body;
+    const user = await adminService.createUser({ fullName, email, password, roles, activeRole });
+    return sendSuccess(res, { user }, "User berhasil dibuat", 201);
+  } catch (err) { next(err); }
+}
+
+export async function updateUser(req, res, next) {
+  try {
+    const user = await adminService.updateUser(req.params.id, req.body);
+    return sendSuccess(res, { user }, "User berhasil diperbarui");
+  } catch (err) { next(err); }
+}
+
+export async function deleteUser(req, res, next) {
+  try {
+    await adminService.deleteUser(req.params.id);
+    return sendSuccess(res, null, "User berhasil dihapus");
+  } catch (err) { next(err); }
+}
+
 export async function listUsers(req, res, next) {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);

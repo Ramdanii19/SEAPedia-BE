@@ -183,6 +183,30 @@ export async function listOrders({ page = 1, limit = 20 }) {
   return { orders, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
 }
 
+export async function createUser({ fullName, email, password, roles, activeRole }) {
+  const existing = await User.findOne({ email });
+  if (existing) throw new ApiError(409, "Email sudah terdaftar");
+  const user = await User.create({ fullName, email, password, roles, activeRole });
+  return user;
+}
+
+export async function updateUser(id, { fullName, email, password, roles, activeRole }) {
+  const user = await User.findById(id);
+  if (!user) throw new ApiError(404, "User tidak ditemukan");
+  if (fullName  !== undefined) user.fullName  = fullName;
+  if (email     !== undefined) user.email     = email;
+  if (password  !== undefined) user.password  = password;
+  if (roles     !== undefined) user.roles     = roles;
+  if (activeRole !== undefined) user.activeRole = activeRole;
+  await user.save();
+  return user;
+}
+
+export async function deleteUser(id) {
+  const user = await User.findByIdAndDelete(id);
+  if (!user) throw new ApiError(404, "User tidak ditemukan");
+}
+
 export async function listStores({ page = 1, limit = 10 }) {
   const skip = (page - 1) * limit;
   const [stores, total] = await Promise.all([

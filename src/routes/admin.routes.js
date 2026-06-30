@@ -21,7 +21,10 @@ const adminGuard = [protect, requireRole(ROLES.ADMIN)];
 
 const router = Router();
 
-router.get("/users",    ...adminGuard, adminController.listUsers);
+router.get("/users",         ...adminGuard, adminController.listUsers);
+router.post("/users",        ...adminGuard, adminController.createUser);
+router.patch("/users/:id",   ...adminGuard, ...mongoId(), validate, adminController.updateUser);
+router.delete("/users/:id",  ...adminGuard, ...mongoId(), validate, adminController.deleteUser);
 router.get("/stores",   ...adminGuard, adminController.listStores);
 router.get("/products",      ...adminGuard, adminController.listProducts);
 router.get("/orders",        ...adminGuard, adminController.listOrders);
