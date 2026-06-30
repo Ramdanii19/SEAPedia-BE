@@ -12,9 +12,9 @@ export async function listAddresses(req, res, next) {
 
 export async function updateAddress(req, res, next) {
   try {
-    const { recipientName, phone, addressDetail, isDefault } = req.body;
+    const { label, recipientName, phone, addressDetail, isDefault } = req.body;
     const updates = Object.fromEntries(
-      Object.entries({ recipientName, phone, addressDetail, isDefault }).filter(([, v]) => v !== undefined)
+      Object.entries({ label, recipientName, phone, addressDetail, isDefault }).filter(([, v]) => v !== undefined)
     );
 
     const address = await addressService.updateAddress({
@@ -40,9 +40,10 @@ export async function deleteAddress(req, res, next) {
 
 export async function createAddress(req, res, next) {
   try {
-    const { recipientName, phone, addressDetail, isDefault } = req.body;
+    const { label, recipientName, phone, addressDetail, isDefault } = req.body;
     const address = await addressService.createAddress({
       buyerId: req.user._id,
+      label,
       recipientName,
       phone,
       addressDetail,

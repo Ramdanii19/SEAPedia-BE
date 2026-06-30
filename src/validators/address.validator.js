@@ -1,6 +1,10 @@
 import { body } from "express-validator";
 
 export const updateAddressValidator = [
+  body("label")
+    .optional()
+    .trim(),
+
   body("recipientName")
     .optional()
     .trim()
@@ -22,6 +26,10 @@ export const updateAddressValidator = [
 ];
 
 export const createAddressValidator = [
+  body("label")
+    .optional()
+    .trim(),
+
   body("recipientName")
     .trim()
     .notEmpty().withMessage("Recipient name is required"),

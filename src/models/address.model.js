@@ -7,6 +7,11 @@ const addressSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    label: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     recipientName: {
       type: String,
       required: true,

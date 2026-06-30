@@ -27,11 +27,11 @@ export async function deleteAddress({ addressId, buyerId }) {
   await address.deleteOne();
 }
 
-export async function createAddress({ buyerId, recipientName, phone, addressDetail, isDefault = false }) {
+export async function createAddress({ buyerId, label, recipientName, phone, addressDetail, isDefault = false }) {
   if (isDefault) {
     await Address.updateMany({ buyer: buyerId, isDefault: true }, { $set: { isDefault: false } });
   }
 
-  const address = await Address.create({ buyer: buyerId, recipientName, phone, addressDetail, isDefault });
+  const address = await Address.create({ buyer: buyerId, label, recipientName, phone, addressDetail, isDefault });
   return address;
 }
